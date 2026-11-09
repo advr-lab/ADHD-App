@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>FocusFlow - Compañero TDAH Glass</title>
+    <!-- PWA & Android Meta Tags -->
+    <link rel="manifest" href="data:application/manifest+json,{
+        &quot;name&quot;: &quot;FocusFlow Glass TDAH&quot;,
+        &quot;short_name&quot;: &quot;FocusFlow Glass&quot;,
+        &quot;start_url&quot;: &quot;.&quot;,
+        &quot;display&quot;: &quot;standalone&quot;,
+        &quot;background_color&quot;: &quot;#0f172a&quot;,
+        &quot;theme_color&quot;: &quot;#4f46e5&quot;,
+        &quot;icons&quot;: [
+            {
+                &quot;src&quot;: &quot;https://placehold.co/192x192/4f46e5/white?text=FF&quot;,
+                &quot;sizes&quot;: &quot;192x192&quot;,
+                &quot;type&quot;: &quot;image/png&quot;
+            },
+            {
+                &quot;src&quot;: &quot;https://placehold.co/512x512/4f46e5/white?text=FF&quot;,
+                &quot;sizes&quot;: &quot;512x512&quot;,
+                &quot;type&quot;: &quot;image/png&quot;
+            }
+        ]
+    }">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter & Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Poppins', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top, #1e1b4b, #0f172a, #020617);
+            color: #f8fafc;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 100vh;
+        }
+        h1, h2, h3, h4 {
+            font-family: 'Poppins', sans-serif;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        .glass-card-hover:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        .glass-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+        }
+        .glass-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+        .glass-input:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(99, 102, 241, 0.8);
+            outline: none;
+        }
+        .glass-nav {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-header {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col max-w-md mx-auto relative overflow-x-hidden shadow-2xl border-x border-white/10">
+
+    <!-- Top Header -->
+    <header class="glass-header px-5 py-4 flex items-center justify-between sticky top-0 z-30">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-500/30">
+                <i class="fa-solid fa-brain"></i>
+            </div>
+            <div>
+                <h1 class="font-heading font-bold text-lg text-white leading-tight">FocusFlow</h1>
+                <p class="text-xs text-indigo-300/70" id="current-date">Edición Glass</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button onclick="openApkModal()" class="bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm hover:bg-indigo-500/30 transition flex items-center space-x-1">
+                <i class="fa-solid fa-android"></i>
+                <span>Guía APK</span>
+            </button>
+            <button onclick="openStatsModal()" class="w-9 h-9 rounded-full glass-card text-purple-300 flex items-center justify-center text-sm font-semibold hover:bg-white/10 transition" title="Estadísticas">
+                <i class="fa-solid fa-trophy"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 pb-28 overflow-y-auto px-4 pt-4" id="main-content">
+        
+        <!-- SECTION 1: HOME / DASHBOARD -->
+        <section id="tab-home" class="space-y-4 view-section">
+            <!-- Welcome Banner -->
+            <div class="glass-card p-5 rounded-3xl relative overflow-hidden bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10">
+                <div class="relative z-10">
+                    <span class="bg-white/10 border border-white/20 text-purple-200 text-[10px] font-semibold px-3 py-1 rounded-full uppercase tracking-wider">Modo Glassmorphism</span>
+                    <h2 class="font-heading text-xl font-bold text-white mt-2">Mente clara, enfoque calmado ✨</h2>
+                    <p class="text-xs text-slate-300 mt-1">Captura pensamientos espontáneos y supera micro-tareas sin esfuerzo.</p>
+                </div>
+            </div>
+
+            <!-- Quick Access Grid -->
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="switchTab('braindump')" class="glass-card glass-card-hover p-4 rounded-2xl text-left transition flex flex-col justify-between group">
+                    <div class="w-10 h-10 rounded-xl bg-pink-500/20 border border-pink-500/30 text-pink-300 flex items-center justify-center mb-3 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-heading font-semibold text-white text-sm">Vaciado Mental</h3>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Vacía el caos rápido</p>
+                    </div>
+                </button>
+
+                <button onclick="switchTab('breakdown')" class="glass-card glass-card-hover p-4 rounded-2xl text-left transition flex flex-col justify-between group">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 flex items-center justify-center mb-3 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-heading font-semibold text-white text-sm">Divisor de Tareas</h3>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Generador de micropasos</p>
+                    </div>
+                </button>
+
+                <button onclick="switchTab('timer')" class="glass-card glass-card-hover p-4 rounded-2xl text-left transition flex flex-col justify-between group">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-300 flex items-center justify-center mb-3 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-heading font-semibold text-white text-sm">Círculo de Enfoque</h3>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Temporizador Pomodoro</p>
+                    </div>
+                </button>
+
+                <button onclick="switchTab('dopamine')" class="glass-card glass-card-hover p-4 rounded-2xl text-left transition flex flex-col justify-between group">
+                    <div class="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/30 text-purple-300 flex items-center justify-center mb-3 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-face-smile-beam"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-heading font-semibold text-white text-sm">Victorias Rápidas</h3>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Dosis de dopamina</p>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Active Micro-Tasks Preview -->
+            <div class="glass-card p-4 rounded-2xl">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="font-heading font-semibold text-sm text-white">Tu Enfoque Actual</h3>
+                    <button onclick="switchTab('breakdown')" class="text-xs text-indigo-400 font-medium hover:underline">Ver todo</button>
+                </div>
+                <div id="home-active-task-container">
+                    <p class="text-xs text-slate-400 italic">No hay micro-tareas activas. ¡Ve al Divisor de Tareas para comenzar una!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: BRAIN DUMP -->
+        <section id="tab-braindump" class="space-y-4 view-section hidden">
+            <div class="glass-card p-4 rounded-2xl">
+                <h2 class="font-heading font-bold text-base text-white mb-1">🧠 Vaciado Mental (Brain Dump)</h2>
+                <p class="text-xs text-slate-300 mb-3">Escribe lo que esté saturando tu mente ahora mismo. ¡Sin estructura necesaria!</p>
+                <textarea id="brain-dump-input" rows="3" placeholder="Necesito responder a Sara, comprar leche, arreglar el estante..." class="w-full p-3 text-xs rounded-xl glass-input resize-none"></textarea>
+                <div class="flex justify-end mt-2">
+                    <button onclick="saveBrainDump()" class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium text-xs px-4 py-2.5 rounded-xl shadow-lg shadow-indigo-500/30 hover:opacity-90 transition flex items-center space-x-1.5">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Capturar Pensamiento</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="space-y-2.5" id="brain-dump-list">
+                <!-- Dynamic Items -->
+            </div>
+        </section>
+
+        <!-- SECTION 3: TASK BREAKDOWN -->
+        <section id="tab-breakdown" class="space-y-4 view-section hidden">
+            <div class="glass-card p-4 rounded-2xl">
+                <h2 class="font-heading font-bold text-base text-white mb-1">🪄 Divisor de Tareas Abrumadoras</h2>
+                <p class="text-xs text-slate-300 mb-3">Ingresa una tarea grande e intimidante y la dividiremos en pasos amigables.</p>
+                <div class="flex space-x-2">
+                    <input type="text" id="big-task-input" placeholder="ej. Limpiar todo el apartamento" class="flex-1 p-3 text-xs rounded-xl glass-input">
+                    <button onclick="generateMicroSteps()" class="bg-emerald-600/80 border border-emerald-500/50 text-white font-medium text-xs px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-600/30 hover:bg-emerald-600 transition">
+                        ¡Dividir!
+                    </button>
+                </div>
+            </div>
+
+            <div id="breakdown-results-container" class="space-y-4">
+                <!-- Generated task steps -->
+            </div>
+
+            <div class="glass-card p-4 rounded-2xl">
+                <h3 class="font-heading font-semibold text-sm text-white mb-2">Proyectos de Tareas Guardados</h3>
+                <div id="saved-projects-list" class="space-y-2">
+                    <p class="text-xs text-slate-400 italic">No hay proyectos guardados todavía.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: VISUAL FOCUS TIMER -->
+        <section id="tab-timer" class="space-y-4 view-section hidden text-center">
+            <div class="glass-card p-6 rounded-2xl flex flex-col items-center">
+                <h2 class="font-heading font-bold text-base text-white mb-1">⏳ Temporizador de Enfoque Visual</h2>
+                <p class="text-xs text-slate-300 mb-6">Respira, concéntrate en un solo paso y deja fluir el tiempo.</p>
+
+                <!-- Timer Modes -->
+                <div class="flex space-x-1 bg-white/5 p-1 rounded-xl mb-6 border border-white/10">
+                    <button onclick="setTimerMode('focus')" id="mode-focus" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white shadow-sm transition">Enfoque (25m)</button>
+                    <button onclick="setTimerMode('shortBreak')" id="mode-shortBreak" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition">Corto (5m)</button>
+                    <button onclick="setTimerMode('longBreak')" id="mode-longBreak" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition">Largo (15m)</button>
+                </div>
+
+                <!-- Circular Ring -->
+                <div class="relative w-56 h-56 flex items-center justify-center my-2">
+                    <svg class="w-full h-full transform -rotate-90">
+                        <circle cx="112" cy="112" r="96" stroke="currentColor" stroke-width="12" class="text-white/10" fill="transparent"></circle>
+                        <circle id="timer-progress-circle" cx="112" cy="112" r="96" stroke="currentColor" stroke-width="12" class="text-indigo-400 transition-all duration-1000" fill="transparent" stroke-dasharray="603.18" stroke-dashoffset="0" stroke-linecap="round"></circle>
+                    </svg>
+                    <div class="absolute flex flex-col items-center">
+                        <span id="timer-display" class="font-heading font-bold text-4xl text-white">25:00</span>
+                        <span id="timer-status-text" class="text-xs text-indigo-300 mt-1 uppercase tracking-wider font-medium">Listo para enfocar</span>
+                    </div>
+                </div>
+
+                <!-- Controls -->
+                <div class="flex space-x-3 mt-6 w-full max-w-xs">
+                    <button id="timer-start-btn" onclick="toggleTimer()" class="flex-1 bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-3 rounded-xl font-semibold text-xs shadow-lg shadow-indigo-500/30 hover:opacity-90 transition">
+                        Iniciar Enfoque
+                    </button>
+                    <button onclick="resetTimer()" class="px-4 bg-white/10 border border-white/20 text-slate-300 py-3 rounded-xl font-semibold text-xs hover:bg-white/20 transition" title="Reiniciar">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 5: DOPAMINE BOOST -->
+        <section id="tab-dopamine" class="space-y-4 view-section hidden">
+            <div class="glass-card p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 to-purple-500/15 border-amber-500/20">
+                <h2 class="font-heading font-bold text-base text-white mb-1">🎉 Zona de Impulso de Dopamina</h2>
+                <p class="text-xs text-slate-300">¡Las victorias rápidas liberan dopamina! Marca pequeñas cosas al instante para celebrar tus logros.</p>
+            </div>
+
+            <div class="glass-card p-4 rounded-2xl flex space-x-2">
+                <input type="text" id="quick-win-input" placeholder="Beber un vaso de agua, hacer la cama..." class="flex-1 p-3 text-xs rounded-xl glass-input" onkeypress="if(event.key === 'Enter') addQuickWin()">
+                <button onclick="addQuickWin()" class="bg-amber-500/80 border border-amber-400/50 text-slate-950 font-semibold text-xs px-4 py-2.5 rounded-xl shadow-lg shadow-amber-500/30 hover:bg-amber-500 transition">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+
+            <div class="space-y-2.5" id="quick-wins-list">
+                <!-- Quick wins list -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="glass-nav fixed bottom-0 left-0 right-0 max-w-md mx-auto py-2 px-4 flex justify-around items-center z-30 shadow-2xl">
+        <button onclick="switchTab('home')" class="nav-btn flex flex-col items-center text-indigo-400 py-1 px-3 rounded-xl transition" data-tab="home">
+            <i class="fa-solid fa-house text-base"></i>
+            <span class="text-[10px] font-medium mt-1">Inicio</span>
+        </button>
+        <button onclick="switchTab('braindump')" class="nav-btn flex flex-col items-center text-slate-400 py-1 px-3 rounded-xl transition" data-tab="braindump">
+            <i class="fa-solid fa-bolt text-base"></i>
+            <span class="text-[10px] font-medium mt-1">Vaciar</span>
+        </button>
+        <button onclick="switchTab('breakdown')" class="nav-btn flex flex-col items-center text-slate-400 py-1 px-3 rounded-xl transition" data-tab="breakdown">
+            <i class="fa-solid fa-wand-magic-sparkles text-base"></i>
+            <span class="text-[10px] font-medium mt-1">Dividir</span>
+        </button>
+        <button onclick="switchTab('timer')" class="nav-btn flex flex-col items-center text-slate-400 py-1 px-3 rounded-xl transition" data-tab="timer">
+            <i class="fa-solid fa-clock text-base"></i>
+            <span class="text-[10px] font-medium mt-1">Tiempo</span>
+        </button>
+        <button onclick="switchTab('dopamine')" class="nav-btn flex flex-col items-center text-slate-400 py-1 px-3 rounded-xl transition" data-tab="dopamine">
+            <i class="fa-solid fa-face-smile-beam text-base"></i>
+            <span class="text-[10px] font-medium mt-1">Logros</span>
+        </button>
+    </nav>
+
+    <!-- Stats Modal -->
+    <div id="stats-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-card rounded-3xl w-full max-w-xs p-5 shadow-2xl animate-in zoom-in duration-200">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-heading font-bold text-white text-base"><i class="fa-solid fa-trophy text-amber-400 mr-2"></i>Rachas TDAH</h3>
+                <button onclick="closeStatsModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="space-y-3">
+                <div class="bg-white/5 border border-white/10 p-3 rounded-2xl flex items-center justify-between">
+                    <span class="text-xs text-slate-300 font-medium">Victorias Rápidas</span>
+                    <span id="stat-wins-count" class="font-heading font-bold text-amber-400 text-base">0</span>
+                </div>
+                <div class="bg-white/5 border border-white/10 p-3 rounded-2xl flex items-center justify-between">
+                    <span class="text-xs text-slate-300 font-medium">Pensamientos Capturados</span>
+                    <span id="stat-thoughts-count" class="font-heading font-bold text-pink-400 text-base">0</span>
+                </div>
+                <div class="bg-white/5 border border-white/10 p-3 rounded-2xl flex items-center justify-between">
+                    <span class="text-xs text-slate-300 font-medium">Sesiones de Enfoque</span>
+                    <span id="stat-focus-count" class="font-heading font-bold text-indigo-400 text-base">0</span>
+                </div>
+            </div>
+            <button onclick="closeStatsModal()" class="w-full mt-5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium text-xs py-3 rounded-xl shadow-lg shadow-indigo-500/30 hover:opacity-95 transition">¡Genial!</button>
+        </div>
+    </div>
+
+    <!-- APK Step-by-Step Guide Modal -->
+    <div id="apk-modal" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-card rounded-3xl w-full max-w-md p-6 shadow-2xl animate-in zoom-in duration-200 max-h-[85vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-heading font-bold text-white text-base flex items-center">
+                    <i class="fa-solid fa-android text-emerald-400 mr-2 text-lg"></i> Cómo crear tu APK paso a paso
+                </h3>
+                <button onclick="closeApkModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <p class="text-xs text-slate-300 mb-4">Como las inteligencias artificiales creamos código web y no archivos ejecutables binarios directamente, puedes generar tu archivo <code class="bg-white/10 px-1 py-0.5 rounded text-indigo-300">.apk</code> en menos de 2 minutos siguiendo estos sencillos pasos:</p>
+            
+            <div class="space-y-3 text-xs">
+                <div class="bg-white/5 border border-white/10 p-3.5 rounded-2xl space-y-1.5">
+                    <span class="font-bold text-indigo-300">Paso 1: Guardar el código</span>
+                    <p class="text-slate-300">Copia todo el código fuente de esta aplicación y guárdalo en tu computadora con el nombre <code class="text-amber-300">index.html</code>.</p>
+                </div>
+
+                <div class="bg-white/5 border border-white/10 p-3.5 rounded-2xl space-y-1.5">
+                    <span class="font-bold text-indigo-300">Paso 2: Subir a un hosting gratuito</span>
+                    <p class="text-slate-300">Sube tu archivo <code class="text-amber-300">index.html</code> a un servicio gratuito como <a href="https://vercel.com" target="_blank" class="text-indigo-400 underline">Vercel</a>, <a href="https://app.netlify.com" target="_blank" class="text-indigo-400 underline">Netlify Drop</a> o GitHub Pages para obtener un enlace web público (ej: <code class="text-slate-400">https://tu-app.vercel.app</code>).</p>
+                </div>
+
+                <div class="bg-white/5 border border-white/10 p-3.5 rounded-2xl space-y-1.5">
+                    <span class="font-bold text-indigo-300">Paso 3: Usar PWABuilder</span>
+                    <p class="text-slate-300">Entra a la plataforma oficial gratuita <a href="https://www.pwabuilder.com" target="_blank" class="text-indigo-400 underline">PWABuilder.com</a>, pega el enlace de tu página web y haz clic en <strong>Start</strong>.</p>
+                </div>
+
+                <div class="bg-white/5 border border-white/10 p-3.5 rounded-2xl space-y-1.5">
+                    <span class="font-bold text-indigo-300">Paso 4: Generar y descargar el APK</span>
+                    <p class="text-slate-300">Haz clic en <strong>"Generate"</strong> en la sección de Android. Te descargará un paquete comprimido que incluye tu archivo <code class="text-amber-300">.apk</code> listo para instalar en tu celular Android.</p>
+                </div>
+            </div>
+
+            <button onclick="closeApkModal()" class="w-full mt-5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium text-xs py-3 rounded-xl shadow-lg shadow-indigo-500/30 hover:opacity-95 transition">Entendido, ¡gracias!</button>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 bg-slate-900/90 border border-white/20 text-white text-xs px-4 py-2.5 rounded-full shadow-2xl backdrop-blur-xl z-50 transition-all duration-300 opacity-0 pointer-events-none">
+        Mensaje de notificación
+    </div>
+
+    <!-- Script -->
+    <script>
+        const options = { weekday: 'long', month: 'short', day: 'numeric' };
+        document.getElementById('current-date').innerText = new Date().toLocaleDateString('es-ES', options);
+
+        let appState = {
+            brainDump: JSON.parse(localStorage.getItem('focusflow_braindump_glass_es')) || [],
+            projects: JSON.parse(localStorage.getItem('focusflow_projects_glass_es')) || [],
+            quickWins: JSON.parse(localStorage.getItem('focusflow_quickwins_glass_es')) || [
+                { id: 1, text: 'Abrí FocusFlow Glass ✨', completed: true },
+                { id: 2, text: 'Respiré profundamente 3 veces', completed: false }
+            ],
+            stats: JSON.parse(localStorage.getItem('focusflow_stats_glass_es')) || { wins: 1, thoughts: 0, focus: 0 }
+        };
+
+        function saveState() {
+            localStorage.setItem('focusflow_braindump_glass_es', JSON.stringify(appState.brainDump));
+            localStorage.setItem('focusflow_projects_glass_es', JSON.stringify(appState.projects));
+            localStorage.setItem('focusflow_quickwins_glass_es', JSON.stringify(appState.quickWins));
+            localStorage.setItem('focusflow_stats_glass_es', JSON.stringify(appState.stats));
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.view-section').forEach(sec => sec.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if(btn.dataset.tab === tabId) {
+                    btn.classList.remove('text-slate-400');
+                    btn.classList.add('text-indigo-400');
+                } else {
+                    btn.classList.remove('text-indigo-400');
+                    btn.classList.add('text-slate-400');
+                }
+            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            toast.classList.add('opacity-100');
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 2500);
+        }
+
+        function saveBrainDump() {
+            const input = document.getElementById('brain-dump-input');
+            const text = input.value.trim();
+            if(!text) {
+                showToast("¡Escribe algo primero!");
+                return;
+            }
+            appState.brainDump.unshift({ id: Date.now(), text, date: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) });
+            appState.stats.thoughts++;
+            input.value = '';
+            saveState();
+            renderBrainDump();
+            showToast("¡Pensamiento capturado de forma segura! 🧠");
+        }
+
+        function deleteBrainDump(id) {
+            appState.brainDump = appState.brainDump.filter(item => item.id !== id);
+            saveState();
+            renderBrainDump();
+        }
+
+        function convertToTask(id) {
+            const item = appState.brainDump.find(i => i.id === id);
+            if(item) {
+                appState.projects.unshift({
+                    id: Date.now(),
+                    title: item.text,
+                    steps: [
+                        { text: "Paso 1: Empezar por solo 2 minutos", done: false },
+                        { text: "Paso 2: Continuar o finalizar", done: false }
+                    ]
+                });
+                deleteBrainDump(id);
+                saveState();
+                renderProjects();
+                renderHomeActiveTask();
+                switchTab('breakdown');
+                showToast("¡Pensamiento convertido en proyecto de tarea!");
+            }
+        }
+
+        function renderBrainDump() {
+            const container = document.getElementById('brain-dump-list');
+            if(appState.brainDump.length === 0) {
+                container.innerHTML = `<div class="glass-card p-6 rounded-2xl text-center text-slate-400 text-xs">¡Tu mente está despejada por ahora!</div>`;
+                return;
+            }
+            container.innerHTML = appState.brainDump.map(item => `
+                <div class="glass-card p-3.5 rounded-2xl flex items-center justify-between gap-3">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs text-white break-words">${escapeHTML(item.text)}</p>
+                        <span class="text-[10px] text-slate-400">${item.date}</span>
+                    </div>
+                    <div class="flex items-center space-x-1.5 shrink-0">
+                        <button onclick="convertToTask(${item.id})" class="p-2 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs hover:bg-emerald-500/30 transition" title="Convertir a tarea">
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                        <button onclick="deleteBrainDump(${item.id})" class="p-2 rounded-xl bg-white/5 border border-white/10 text-slate-400 text-xs hover:text-red-400 transition" title="Eliminar">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function generateMicroSteps() {
+            const input = document.getElementById('big-task-input');
+            const title = input.value.trim();
+            if(!title) {
+                showToast("¡Por favor ingresa una tarea abrumadora!");
+                return;
+            }
+
+            let steps = [
+                { text: `Reunir lo necesario para "${title}"`, done: false },
+                { text: "Preparar el espacio de trabajo por 2 minutos", done: false },
+                { text: "Hacer el primer bloque de acción diminuta", done: false },
+                { text: "Celebrar y tomar un respiro de agua", done: false }
+            ];
+
+            const newProject = { id: Date.now(), title, steps };
+            appState.projects.unshift(newProject);
+            input.value = '';
+            saveState();
+            renderProjects();
+            renderHomeActiveTask();
+            showToast("¡Micropasos generados! Tú puedes 🪄");
+        }
+
+        function toggleStep(projectId, stepIndex) {
+            const proj = appState.projects.find(p => p.id === projectId);
+            if(proj) {
+                proj.steps[stepIndex].done = !proj.steps[stepIndex].done;
+                if(proj.steps.every(s => s.done)) {
+                    confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
+                    appState.stats.wins++;
+                    showToast("🎉 ¡Proyecto completado! ¡Increíble trabajo!");
+                }
+                saveState();
+                renderProjects();
+                renderHomeActiveTask();
+            }
+        }
+
+        function deleteProject(projectId) {
+            appState.projects = appState.projects.filter(p => p.id !== projectId);
+            saveState();
+            renderProjects();
+            renderHomeActiveTask();
+        }
+
+        function renderProjects() {
+            const container = document.getElementById('saved-projects-list');
+            const breakdownResults = document.getElementById('breakdown-results-container');
+
+            if(appState.projects.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 italic">No hay proyectos guardados todavía.</p>`;
+                breakdownResults.innerHTML = ``;
+                return;
+            }
+
+            container.innerHTML = appState.projects.map(p => `
+                <div class="flex items-center justify-between p-2.5 rounded-xl bg-white/5 border border-white/10">
+                    <span class="text-xs font-medium text-slate-200 truncate pr-2">${escapeHTML(p.title)}</span>
+                    <button onclick="deleteProject(${p.id})" class="text-slate-400 hover:text-red-400 text-xs"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `).join('');
+
+            breakdownResults.innerHTML = appState.projects.map(p => {
+                const completedCount = p.steps.filter(s => s.done).length;
+                const progressPercent = Math.round((completedCount / p.steps.length) * 100);
+                
+                return `
+                    <div class="glass-card p-4 rounded-2xl space-y-3">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-heading font-semibold text-sm text-white">${escapeHTML(p.title)}</h3>
+                                <p class="text-[10px] text-slate-400 mt-0.5">${completedCount} de ${p.steps.length} pasos completados</p>
+                            </div>
+                            <button onclick="deleteProject(${p.id})" class="text-slate-400 hover:text-red-400 text-xs"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="w-full bg-white/10 h-2 rounded-full overflow-hidden">
+                            <div class="bg-emerald-400 h-full transition-all duration-300" style="width: ${progressPercent}%"></div>
+                        </div>
+
+                        <!-- Steps list -->
+                        <div class="space-y-2 pt-1">
+                            ${p.steps.map((step, idx) => `
+                                <div onclick="toggleStep(${p.id}, ${idx})" class="flex items-center space-x-3 p-2.5 rounded-xl border transition cursor-pointer ${step.done ? 'bg-emerald-500/10 border-emerald-500/30 text-slate-400 line-through' : 'bg-white/5 border-white/10 text-slate-200 hover:border-white/20'}">
+                                    <div class="w-5 h-5 rounded-md flex items-center justify-center border ${step.done ? 'bg-emerald-500 border-emerald-500 text-slate-950 font-bold' : 'border-white/30 bg-white/5'}">
+                                        ${step.done ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}
+                                    </div>
+                                    <span class="text-xs font-medium">${escapeHTML(step.text)}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderHomeActiveTask() {
+            const container = document.getElementById('home-active-task-container');
+            if(appState.projects.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 italic">No hay micro-tareas activas. ¡Ve al Divisor de Tareas para comenzar una!</p>`;
+                return;
+            }
+            const activeProj = appState.projects[0];
+            const nextStepIdx = activeProj.steps.findIndex(s => !s.done);
+            
+            if(nextStepIdx === -1) {
+                container.innerHTML = `
+                    <div class="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-center">
+                        <p class="text-xs font-semibold text-emerald-300">🎉 ¡Todos los pasos de "${escapeHTML(activeProj.title)}" completados!</p>
+                        <button onclick="deleteProject(${activeProj.id})" class="mt-2 text-[10px] bg-emerald-500 text-slate-950 font-semibold px-3 py-1.5 rounded-lg">Limpiar Proyecto</button>
+                    </div>
+                `;
+                return;
+            }
+
+            const nextStep = activeProj.steps[nextStepIdx];
+            container.innerHTML = `
+                <div class="glass-card p-3.5 rounded-xl flex items-center justify-between gap-3 bg-white/5">
+                    <div class="min-w-0">
+                        <span class="text-[10px] font-semibold text-indigo-400 uppercase tracking-wide">Proyecto: ${escapeHTML(activeProj.title)}</span>
+                        <p class="text-xs font-medium text-white mt-0.5 truncate">${escapeHTML(nextStep.text)}</p>
+                    </div>
+                    <button onclick="toggleStep(${activeProj.id}, ${nextStepIdx})" class="px-3 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl text-xs font-semibold hover:opacity-90 transition shrink-0 shadow-md">
+                        Hecho ✓
+                    </button>
+                </div>
+            `;
+        }
+
+        let timerInterval = null;
+        let timerSeconds = 25 * 60;
+        let totalTimerSeconds = 25 * 60;
+        let isTimerRunning = false;
+        let currentTimerMode = 'focus';
+
+        const timerModesConfig = {
+            focus: { time: 25 * 60, label: 'Listo para enfocar' },
+            shortBreak: { time: 5 * 60, label: 'Hora de relajarse' },
+            longBreak: { time: 15 * 60, label: 'Descanso profundo' }
+        };
+
+        function setTimerMode(mode) {
+            currentTimerMode = mode;
+            timerSeconds = timerModesConfig[mode].time;
+            totalTimerSeconds = timerSeconds;
+            isTimerRunning = false;
+            clearInterval(timerInterval);
+            document.getElementById('timer-start-btn').innerText = 'Iniciar Enfoque';
+            
+            ['focus', 'shortBreak', 'longBreak'].forEach(m => {
+                const btn = document.getElementById(`mode-${m}`);
+                if(m === mode) {
+                    btn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white shadow-sm transition";
+                } else {
+                    btn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-400 transition";
+                }
+            });
+
+            document.getElementById('timer-status-text').innerText = timerModesConfig[mode].label;
+            updateTimerDisplay();
+        }
+
+        function toggleTimer() {
+            if(isTimerRunning) {
+                clearInterval(timerInterval);
+                isTimerRunning = false;
+                document.getElementById('timer-start-btn').innerText = 'Reanudar';
+                document.getElementById('timer-status-text').innerText = 'Pausado';
+            } else {
+                isTimerRunning = true;
+                document.getElementById('timer-start-btn').innerText = 'Pausar';
+                document.getElementById('timer-status-text').innerText = currentTimerMode === 'focus' ? 'Enfocando...' : 'Tomando un respiro...';
+                
+                timerInterval = setInterval(() => {
+                    if(timerSeconds > 0) {
+                        timerSeconds--;
+                        updateTimerDisplay();
+                    } else {
+                        clearInterval(timerInterval);
+                        isTimerRunning = false;
+                        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+                        if(currentTimerMode === 'focus') {
+                            appState.stats.focus++;
+                            saveState();
+                        }
+                        showToast("¡El tiempo se acabó! ¡Gran sesión! 🌟");
+                        document.getElementById('timer-start-btn').innerText = 'Iniciar Enfoque';
+                    }
+                }, 1000);
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            timerSeconds = timerModesConfig[currentTimerMode].time;
+            document.getElementById('timer-start-btn').innerText = 'Iniciar Enfoque';
+            document.getElementById('timer-status-text').innerText = timerModesConfig[currentTimerMode].label;
+            updateTimerDisplay();
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timerSeconds / 60);
+            const seconds = timerSeconds % 60;
+            document.getElementById('timer-display').innerText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+            const circle = document.getElementById('timer-progress-circle');
+            const circumference = 2 * Math.PI * 96;
+            const offset = circumference - (timerSeconds / totalTimerSeconds) * circumference;
+            circle.style.strokeDashoffset = offset;
+        }
+
+        function addQuickWin() {
+            const input = document.getElementById('quick-win-input');
+            const text = input.value.trim();
+            if(!text) {
+                showToast("¡Escribe una victoria rápida primero!");
+                return;
+            }
+            appState.quickWins.unshift({ id: Date.now(), text, completed: false });
+            input.value = '';
+            saveState();
+            renderQuickWins();
+            showToast("¡Victoria rápida agregada!");
+        }
+
+        function toggleQuickWin(id) {
+            const item = appState.quickWins.find(q => q.id === id);
+            if(item) {
+                item.completed = !item.completed;
+                if(item.completed) {
+                    confetti({ particleCount: 50, spread: 50, origin: { y: 0.6 } });
+                    appState.stats.wins++;
+                    showToast("¡Subidón de dopamina! 🎉");
+                }
+                saveState();
+                renderQuickWins();
+            }
+        }
+
+        function deleteQuickWin(id) {
+            appState.quickWins = appState.quickWins.filter(q => q.id !== id);
+            saveState();
+            renderQuickWins();
+        }
+
+        function renderQuickWins() {
+            const container = document.getElementById('quick-wins-list');
+            if(appState.quickWins.length === 0) {
+                container.innerHTML = `<div class="glass-card p-6 rounded-2xl text-center text-slate-400 text-xs">¡Añade una pequeña victoria para aumentar tu energía!</div>`;
+                return;
+            }
+
+            container.innerHTML = appState.quickWins.map(item => `
+                <div class="glass-card p-3.5 rounded-2xl flex items-center justify-between gap-3 transition">
+                    <div onclick="toggleQuickWin(${item.id})" class="flex items-center space-x-3 flex-1 cursor-pointer">
+                        <div class="w-6 h-6 rounded-lg flex items-center justify-center border transition ${item.completed ? 'bg-amber-400 border-amber-400 text-slate-950 font-bold' : 'border-white/30 bg-white/5'}">
+                            ${item.completed ? '<i class="fa-solid fa-check text-xs"></i>' : ''}
+                        </div>
+                        <span class="text-xs font-medium ${item.completed ? 'text-slate-500 line-through' : 'text-white'}">${escapeHTML(item.text)}</span>
+                    </div>
+                    <button onclick="deleteQuickWin(${item.id})" class="text-slate-400 hover:text-red-400 text-xs px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `).join('');
+        }
+
+        function openStatsModal() {
+            document.getElementById('stat-wins-count').innerText = appState.stats.wins;
+            document.getElementById('stat-thoughts-count').innerText = appState.stats.thoughts;
+            document.getElementById('stat-focus-count').innerText = appState.stats.focus;
+            document.getElementById('stats-modal').classList.remove('hidden');
+        }
+
+        function closeStatsModal() {
+            document.getElementById('stats-modal').classList.add('hidden');
+        }
+
+        function openApkModal() {
+            document.getElementById('apk-modal').classList.remove('hidden');
+        }
+
+        function closeApkModal() {
+            document.getElementById('apk-modal').classList.add('hidden');
+        }
+
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installBtn = document.getElementById('install-btn');
+            if (installBtn) {
+                installBtn.classList.remove('hidden');
+                installBtn.classList.add('flex');
+            }
+        });
+
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        showToast("¡Aplicación instalada con éxito! 🎉");
+                    }
+                    deferredPrompt = null;
+                    document.getElementById('install-btn').classList.add('hidden');
+                });
+            } else {
+                showToast("Para instalar: Abre el menú del navegador (⋮) y selecciona 'Agregar a la pantalla principal'.");
+            }
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        renderBrainDump();
+        renderProjects();
+        renderHomeActiveTask();
+        renderQuickWins();
+        updateTimerDisplay();
+    </script>
+</body>
+</html>
